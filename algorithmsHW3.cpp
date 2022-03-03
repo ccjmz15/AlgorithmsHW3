@@ -11,66 +11,18 @@ class Node {
 
 class Graph {
 	public:
-		Graph() {
-			_numVertices = 0;
-			_numEdges = 0;
+		Graph(vector<int> V, map<int, map<int, int>> E) {
+			Vertices = V;
+			Edges = E;
+			_numVertices = V.size();
+			_numEdges = E.size();
 
-			int userInput;
-			int counter = 0;
-			int i, j = 0;
+			initializeAdjacencyList(); // Creates an array of linked lists, each linked list is filled with NULL value
+			initializeVisited(); // Creates an array of size _numVertices and fills all values as 'false' or '0'
 
-			cout << "Input the # of vertices, then the sequence of edges, and end with neg integer." << endl << endl;
+			fillAdjacencyList(); // Create the initial adjacency list, uses Edges to compute
 
-			cout << "Number of vertices = ";
-			cin >> userInput;
-			cout << endl;
-
-			_numVertices = userInput; // Validate
-
-			createVertices();
-			initializeVisited();
-			initializeAdjacencyList();
-
-			while (true) {
-				if (counter % 2 == 0) {
-					cout << "i = ";
-					cin >> i;
-				}
-				else {
-					cout << "j = ";
-					cin >> j;
-				}
-				if ((i < 0 || j < 0) || ((i || j ) > _numVertices - 1)) { break; }
-				if (counter % 2 == 1) { 
-					addEdgeForE(i, j);
-					addEdge(i, j);
-					cout << "[" << i << ", " << j << "]\n" << endl;
-				}
-				counter++;
-			}
-			cout << endl << endl;
-			printVertices();
-			printEdges();
 			printAdjacencyList();
-		}
-
-		void printVertices() {
-			cout << "V = {";
-			for (int i = 0; i < V.size() - 1; i++) { cout << V.at(i) << ","; }
-			cout << V.at(V.size() - 1) << "}" << endl;
-		}
-
-		void printEdges() {
-			int counter = E.size();
-			cout << "E = {";
-			for (itr = E.begin(); itr != E.end(); itr++) {
-				for (ptr = itr->second.begin(); ptr != itr->second.end(); ptr++) { 
-					cout << "{" << ptr->first << "," << ptr->second << "}";
-					if (counter != 1) { cout << ","; }
-					counter--;
-				}
-			}
-			cout << "}" << endl;
 		}
 
 		void printAdjacencyList() {
@@ -94,9 +46,9 @@ class Graph {
 
 		void DFS(int vertex);
 
-		void addEdge(int i, int j) { append(i, j); append(j, i); _numEdges++; printAdjacencyList(); }
+		void addEdge(int i, int j) { append(i, j); append(j, i); _numEdges++; } // Calls append twice, flipping the parameters.
 
-		void append(int i, int j) {
+		void append(int i, int j) { // Appends vertex j to the end of linked list of vertex i
 			// 1. create and allocate node
 			Node* newNode = new Node;
 			Node* last = adjacencyList[i];
@@ -116,19 +68,17 @@ class Graph {
 			// 6. Change the next of last node
 			last->next = newNode;
 			return;
-		}
+		} 
 
-		void createVertices() {
-			vector<int> listOfVertices;
-			for (int counter = 0; counter < _numVertices; counter++) { listOfVertices.push_back(counter); }
-			V = listOfVertices;
-		}
+		void fillAdjacencyList() { 
+			map<int, map<int, int> >::iterator itr;
+			map<int, int>::iterator ptr;
 
-		void addEdgeForE(int i, int j) {
-			int index = E.size();
-			E.insert(make_pair(index, map<int, int>()));
-			E[index].insert(make_pair(i, j));
-			_numEdges++;
+			for (itr = Edges.begin(); itr != Edges.end(); itr++) {
+				for (ptr = itr->second.begin(); ptr != itr->second.end(); ptr++) {
+					addEdge(ptr->first, ptr->second);
+				}
+			}
 		}
 
 		void initializeVisited() { visited = new bool[_numVertices]; for (int i = 0; i < _numVertices; i++) { visited[i] = false; } }
@@ -142,16 +92,82 @@ class Graph {
 		Node** adjacencyList;
 		Node* prev;
 
-		vector<int> V;
-		map<int, map<int, int>> E;
-
 		bool* visited;
 
-		// Helper variables for E
-		map<int, map<int, int> >::iterator itr;
-		map<int, int>::iterator ptr;
+		vector<int> Vertices;
+		map<int, map<int, int>> Edges;
+
 };
 
+void printVertices(vector<int> listOfVertices) {
+	cout << "V = {";
+	for (int i = 0; i < listOfVertices.size() - 1; i++) { cout << listOfVertices.at(i) << ","; }
+	cout << listOfVertices.at(listOfVertices.size() - 1) << "}" << endl;
+}
+
+void printEdges(map<int, map<int, int>> edgeMapping) {
+	int counter = edgeMapping.size();
+	cout << "E = {";
+	map<int, map<int, int> >::iterator itr;
+	map<int, int>::iterator ptr;
+	for (itr = edgeMapping.begin(); itr != edgeMapping.end(); itr++) {
+		for (ptr = itr->second.begin(); ptr != itr->second.end(); ptr++) {
+			cout << "{" << ptr->first << "," << ptr->second << "}";
+			if (counter != 1) { cout << ","; }
+			counter--;
+		}
+	}
+	cout << "}" << endl;
+}
+
+map<int, map<int,int>> addEdgeForE(map<int, map<int, int>> edgeMapping, int i, int j) {
+	int index = edgeMapping.size();
+	edgeMapping.insert(make_pair(index, map<int, int>()));
+	edgeMapping[index].insert(make_pair(i, j));
+	return edgeMapping;
+}
+
+vector<int> createVertices(int numVertices) {
+	vector<int> listOfVertices;
+	for (int counter = 0; counter < numVertices; counter++) { listOfVertices.push_back(counter); }
+	return listOfVertices;
+}
+
 int main() {
-	Graph g;
+	vector<int> V;
+	map<int, map<int, int>> E;
+	int userInput, numVertices;
+	int counter = 0;
+	int i, j = 0;
+
+	cout << "Input the # of vertices, then the sequence of edges, and end with neg integer." << endl << endl;
+
+	cout << "Number of vertices = ";
+	cin >> numVertices;
+	cout << endl;
+
+	V = createVertices(numVertices);
+
+	while (true) {
+		if (counter % 2 == 0) {
+			cout << "i = ";
+			cin >> i;
+		}
+		else {
+			cout << "j = ";
+			cin >> j;
+		}
+		if ((i < 0 || j < 0) || ((i || j) > numVertices - 1)) { break; }
+		if (counter % 2 == 1) {
+			E = addEdgeForE(E, i, j);
+			cout << "[" << i << ", " << j << "]\n" << endl;
+		}
+		counter++;
+	}
+	cout << endl << endl;
+
+	printVertices(V);
+	printEdges(E);
+	
+	Graph g = Graph(V, E);
 }
