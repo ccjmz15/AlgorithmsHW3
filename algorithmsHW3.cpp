@@ -12,19 +12,24 @@ class Node {
 class Graph {
 	public:
 		Graph() {
+			_numVertices = 0;
+			_numEdges = 0;
+
 			int userInput;
 			int counter = 0;
 			int i, j = 0;
 
-			cout << "Please input the # of vertices, followed by a sequence of pairs, ending with - int to signify the end of the list." << endl << endl;
+			cout << "Input the # of vertices, then the sequence of edges, and end with neg integer." << endl << endl;
 
 			cout << "Number of vertices = ";
 			cin >> userInput;
 			cout << endl;
 
 			_numVertices = userInput; // Validate
+
 			createVertices();
-			createMark();
+			initializeVisited();
+			initializeAdjacencyList();
 
 			while (true) {
 				if (counter % 2 == 0) {
@@ -35,9 +40,10 @@ class Graph {
 					cout << "j = ";
 					cin >> j;
 				}
-				if (i < 0 || j < 0) { break; }
+				if ((i < 0 || j < 0) || ((i || j ) > _numVertices - 1)) { break; }
 				if (counter % 2 == 1) { 
 					addEdgeForE(i, j);
+					addEdge(i, j);
 					cout << "[" << i << ", " << j << "]\n" << endl;
 				}
 				counter++;
@@ -45,10 +51,7 @@ class Graph {
 			cout << endl << endl;
 			printVertices();
 			printEdges();
-			printMark();
-
-			initializeAdjacencyList();
-			createAdjacencyList();
+			printAdjacencyList();
 		}
 
 		void printVertices() {
@@ -84,14 +87,41 @@ class Graph {
 			}
 		}
 
-		void printMark() { for (int i = 0; i < _numVertices; i++) { cout << visited[i] << endl; } }
+		void printVisited() { for (int i = 0; i < _numVertices; i++) { cout << visited[i] << endl; } }
 
 	protected:
 		void Components(); // computes the vertex sets of the connected components of G. Involves calling DFS(G, v), v = 0, 1, ..n – 1.
 
-		void DFS(int vertex) {
-			int u;
-			visited[vertex] = 1;
+		void DFS(int vertex);
+
+		void addEdge(int i, int j) { append(i, j); append(j, i); _numEdges++; printAdjacencyList(); }
+
+		void append(int i, int j) {
+			// 1. create and allocate node
+			Node* newNode = new Node;
+			Node* last = adjacencyList[i];
+			// 2. assign data to the node
+			newNode->data = j;
+			// 3. set next pointer of new node to null as its the last node
+			newNode->next = NULL;
+			// 4. if list is empty, new node becomes first node
+			if (adjacencyList[i] == NULL)
+			{
+				adjacencyList[i] = newNode;
+				return;
+			}
+			// 5. Else traverse till the last node
+			while (last->next != NULL)
+				last = last->next;
+			// 6. Change the next of last node
+			last->next = newNode;
+			return;
+		}
+
+		void createVertices() {
+			vector<int> listOfVertices;
+			for (int counter = 0; counter < _numVertices; counter++) { listOfVertices.push_back(counter); }
+			V = listOfVertices;
 		}
 
 		void addEdgeForE(int i, int j) {
@@ -101,53 +131,9 @@ class Graph {
 			_numEdges++;
 		}
 
-		void addEdge(int i, int j) {
-			// To track last node of the list
+		void initializeVisited() { visited = new bool[_numVertices]; for (int i = 0; i < _numVertices; i++) { visited[i] = false; } }
 
-				// Create a new node
-			Node* temp = new Node();
-
-				// Input the random data
-			temp->data = j;
-			temp->next = NULL;
-
-				// If the node is first
-			if (*(adjacencyList + i) == NULL) {
-				*(adjacencyList + i) = temp;
-			}
-			else { prev->next = temp; }
-			prev = temp;
-		}
-
-		void createVertices() {
-			vector<int> listOfVertices;
-			for (int counter = 0; counter < _numVertices; counter++) { listOfVertices.push_back(counter); }
-			V = listOfVertices;
-		}
-
-		void createMark() {
-			visited = new bool[_numVertices];
-			for (int i = 0; i < _numVertices; i++) { visited[i] = false; }
-		}
-
-		void initializeAdjacencyList() {
-			adjacencyList = new Node * [_numVertices];
-			for (int i = 0; i < _numVertices; ++i) {
-				*(adjacencyList + i) = NULL;
-			}
-		}
-
-		void createAdjacencyList() {
-			for (int i = 0; i < _numVertices; ++i) {
-				for (itr = E.begin(); itr != E.end(); itr++) {
-					for (ptr = itr->second.begin(); ptr != itr->second.end(); ptr++) {
-						addEdge(ptr->first, ptr->second);
-						addEdge(ptr->second, ptr->first);
-					}
-				}
-			}
-			printAdjacencyList();
-		}
+		void initializeAdjacencyList() { adjacencyList = new Node * [_numVertices]; for (int i = 0; i < _numVertices; ++i) { adjacencyList[i] = NULL; } }
 
 	private:
 		int _numVertices;
@@ -166,37 +152,6 @@ class Graph {
 		map<int, int>::iterator ptr;
 };
 
-void print_list(Node* n) {
-	while (n != NULL) {
-		cout << n->data << " ";
-		n = n->next;
-	}
-	cout << endl;
-}
-
 int main() {
 	Graph g;
-
-	/*
-	Node* head = NULL;
-	Node* second = NULL;
-	Node* third = NULL;
-
-	head = new Node();
-	second = new Node();
-	third = new Node();
-
-	head->data = 1;
-	head->next = second;
-
-	second->data = 2;
-	second->next = third;
-
-	third->data = 3;
-	third->next = NULL;
-
-	print_list(head);
-	print_list(second);
-	print_list(third);
-	*/
 }
