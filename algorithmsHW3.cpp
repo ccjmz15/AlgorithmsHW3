@@ -21,11 +21,10 @@ class Graph {
 			initializeVisited(); // Creates an array of size _numVertices and fills all values as 'false' or '0'
 
 			fillAdjacencyList(); // Create the initial adjacency list, uses Edges to compute
-
-			printAdjacencyList();
 		}
 
 		void printAdjacencyList() {
+			cout << endl;
 			for (int i = 0; i < _numVertices; ++i) {
 				Node* temp = *(adjacencyList + i);
 
@@ -168,6 +167,10 @@ int main() {
 
 	printVertices(V);
 	printEdges(E);
-	
-	Graph g = Graph(V, E);
+
+	cout << endl;
+
+	Graph graph = Graph(V, E);
+	graph.printVisited();
+	graph.printAdjacencyList();
 }
