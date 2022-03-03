@@ -12,8 +12,8 @@ class Node {
 class Graph {
 	public:
 		Graph(vector<int> V, map<int, map<int, int>> E) {
-			Vertices = V;
-			Edges = E;
+			vertices = V;
+			edges = E;
 			_numVertices = V.size();
 			_numEdges = E.size();
 
@@ -22,6 +22,10 @@ class Graph {
 
 			fillAdjacencyList(); // Create the initial adjacency list, uses Edges to compute
 		}
+
+		void addEdge(int i, int j) { append(i, j); append(j, i); _numEdges++; } // Calls append twice, flipping the parameters.
+
+		void deleteEdge(int i, int j);
 
 		void printAdjacencyList() {
 			cout << endl;
@@ -44,8 +48,6 @@ class Graph {
 		void Components(); // computes the vertex sets of the connected components of G. Involves calling DFS(G, v), v = 0, 1, ..n – 1.
 
 		void DFS(int vertex);
-
-		void addEdge(int i, int j) { append(i, j); append(j, i); _numEdges++; } // Calls append twice, flipping the parameters.
 
 		void append(int i, int j) { // Appends vertex j to the end of linked list of vertex i
 			// 1. create and allocate node
@@ -93,10 +95,10 @@ class Graph {
 
 		bool* visited;
 
-		vector<int> Vertices;
-		map<int, map<int, int>> Edges;
-
+		vector<int> vertices;
+		map<int, map<int, int>> edges;
 };
+
 
 void printVertices(vector<int> listOfVertices) {
 	cout << "V = {";
@@ -135,9 +137,9 @@ vector<int> createVertices(int numVertices) {
 int main() {
 	vector<int> V;
 	map<int, map<int, int>> E;
-	int userInput, numVertices;
-	int counter = 0;
-	int i, j = 0;
+
+	int numVertices, i, j = 0;
+	int loopCount = 0;
 
 	cout << "Input the # of vertices, then the sequence of edges, and end with neg integer." << endl << endl;
 
@@ -148,7 +150,7 @@ int main() {
 	V = createVertices(numVertices);
 
 	while (true) {
-		if (counter % 2 == 0) {
+		if (loopCount % 2 == 0) {
 			cout << "i = ";
 			cin >> i;
 		}
@@ -157,11 +159,11 @@ int main() {
 			cin >> j;
 		}
 		if ((i < 0 || j < 0) || ((i || j) > numVertices - 1)) { break; }
-		if (counter % 2 == 1) {
+		if (loopCount % 2 == 1) {
 			E = addEdgeForE(E, i, j);
 			cout << "[" << i << ", " << j << "]\n" << endl;
 		}
-		counter++;
+		loopCount++;
 	}
 	cout << endl << endl;
 
