@@ -12,6 +12,7 @@ class Node {
 class Graph {
 	public:
 		Graph(int numVertices, map<int, map<int, int>> E) {
+
 			_numVertices = numVertices;
 			_numEdges = E.size();
 
@@ -20,7 +21,6 @@ class Graph {
 			resetVisited(); // Creates an array of size _numVertices and fills all values as 'false' or '0'
 
 			fillAdjacencyList(E); // Create the initial adjacency list, uses Edges to compute
-			fillAdjacencyMatrix();
 		}
 
 		~Graph() { deleteEntireAdjacencyList(); }
@@ -28,6 +28,27 @@ class Graph {
 		void edgeAddition(int i, int j) { append(i, j); append(j, i); _numEdges++; } // Calls append twice, flipping the parameters.
 
 		void edgeDeletion(int i, int j);
+
+		void DFS(int vertex) {
+			Node* head = adjacencyList[vertex];
+			vector<int> adjacentVertices = Visit(head);
+			int length = listLength(head);
+
+			visited[vertex] = true;
+			printVisited();
+			cout << endl << endl;
+			for (int i = 0; i < length; i++) {
+				if (visited[adjacentVertices.at(i)] == false) {
+					DFS(adjacentVertices.at(i));
+				}
+			}
+		}
+
+		void Components() {// computes the vertex sets of the connected components of G. Involves calling DFS(G, v), v = 0, 1, ..n – 1.
+			fillAdjacencyMatrix();
+			printAdjacencyMatrix();
+			printAdjacencyList();
+		}
 
 		void printAdjacencyList() {
 			cout << endl;
@@ -45,44 +66,19 @@ class Graph {
 		}
 
 		void printAdjacencyMatrix() {
+			cout << endl << endl;
 			for (int i = 0; i < _numVertices; i++) {
 				cout << endl;
 				for (int j = 0; j < _numVertices; j++) {
 					cout << '\t' << adjacencyMatrix[i][j];
 				}
 			}
+			cout << endl << endl;
 		}
 
 		void printVisited() { for (int i = 0; i < _numVertices; i++) { cout << visited[i] << endl; } }
 
-		void DFS(int vertex) {
-			Node* head = adjacencyList[vertex];
-			vector<int> adjacentVertices = Visit(head);
-			int length = listLength(head);
-
-			visited[vertex] = true;
-			printVisited();
-			cout << endl << endl;
-			for (int i = 0; i < length; i++) {
-				if (visited[adjacentVertices.at(i)] == false) {
-					DFS(adjacentVertices.at(i));
-				}
-			}
-		}
-
 	protected: // Basically all helper methods that cannot be called from outside the Graph class.
-
-		void Components() {// computes the vertex sets of the connected components of G. Involves calling DFS(G, v), v = 0, 1, ..n – 1.
-			
-			for (int i = 0; i < _numVertices; i++) { // Loop through each of the vertices
-				resetVisited(); // Reset the visited list to all false.
-				while (true) { // While DFS is running...
-					DFS(i);
-				
-				} 
-			}
-		
-		}
 
 		vector<int> Visit(Node* head) {
 			vector<int> vec;
@@ -108,9 +104,9 @@ class Graph {
 			for (int i = 0; i < _numVertices; i++) {
 				vector<int> connectedComponents = Visit(adjacencyList[i]);
 				for (int j = 0; j < _numVertices; j++) {
-					adjacencyMatrix[i][j] == false;
+					adjacencyMatrix[i][j] = false;
 					for (vector<int>::iterator itr = connectedComponents.begin(); itr != connectedComponents.end(); ++itr) {
-						adjacencyMatrix[i][*itr] == true;
+						adjacencyMatrix[i][*itr] = true;
 					}
 				}
 			}
@@ -154,7 +150,7 @@ class Graph {
 				Node* current = adjacencyList[i];
 				Node* next;
 				while (current != NULL) {
-					cout << current->data << "\t";
+					//cout << current->data << "\t";
 					next = current->next;
 					free(current);
 					current = next;
@@ -208,7 +204,6 @@ map<int, map<int,int>> addEdgeForE(map<int, map<int, int>> edgeMapping, int i, i
 	return edgeMapping;
 }
 
-
 int main() {
 	vector<int> V;
 	map<int, map<int, int>> E;
@@ -246,10 +241,6 @@ int main() {
 	cout << endl;
 
 	Graph graph = Graph(numVertices, E);
-	graph.printVisited();
-	graph.printAdjacencyList();
-
-	graph.printAdjacencyMatrix();
-
+	graph.Components();
 	graph.~Graph();
 }
