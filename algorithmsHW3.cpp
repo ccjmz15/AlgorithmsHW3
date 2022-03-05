@@ -25,9 +25,9 @@ class Graph {
 
 		~Graph() { deleteEntireAdjacencyList(); }
 
-		void edgeAddition(int i, int j) { append(i, j); append(j, i); _numEdges++; } // Calls append twice, flipping the parameters.
+		void edgeAddition(int i, int j) { addNode(i, j); addNode(j, i); _numEdges++; Components(); } // Calls append twice, flipping the parameters.
 
-		void edgeDeletion(int i, int j);
+		void edgeDeletion(int i, int j) { removeNode(i, j); removeNode(j, i); _numEdges--; Components(); }
 
 		void DFS(int vertex) {
 			Node* head = adjacencyList[vertex];
@@ -35,8 +35,6 @@ class Graph {
 			int length = listLength(head);
 
 			visited[vertex] = true;
-			printVisited();
-			cout << endl << endl;
 			for (int i = 0; i < length; i++) {
 				if (visited[adjacentVertices.at(i)] == false) {
 					DFS(adjacentVertices.at(i));
@@ -45,13 +43,32 @@ class Graph {
 		}
 
 		void Components() {// computes the vertex sets of the connected components of G. Involves calling DFS(G, v), v = 0, 1, ..n – 1.
+			_numComponents = 0;
+			components = vector<vector<int>>();
 			fillAdjacencyMatrix();
-			printAdjacencyMatrix();
-			printAdjacencyList();
+
+			for (int i = 0; i < _numVertices; i++) {
+				DFS(i);
+				if (_numComponents == 0) { components.push_back(getComponent()); _numComponents++; }
+				else { if (!isRepeatedComponent()) { components.push_back(getComponent()); _numComponents++; } }
+				resetVisited();
+			}
+		}
+
+		void printAllComponents() {
+			cout << endl << endl << "Number of Components: " << _numComponents << endl;
+			for (int i = 0; i < _numComponents; i++) {
+				vector<int> vertexSetOfComponent = components.at(i);
+				cout << i + 1 << ")";
+				for (int j = 0; j < vertexSetOfComponent.size(); j++) {
+					cout << '\t' << vertexSetOfComponent.at(j);
+				}
+				cout << endl;
+			}
 		}
 
 		void printAdjacencyList() {
-			cout << endl;
+			cout << endl << endl;
 			for (int i = 0; i < _numVertices; ++i) {
 				Node* temp = *(adjacencyList + i);
 
@@ -73,12 +90,70 @@ class Graph {
 					cout << '\t' << adjacencyMatrix[i][j];
 				}
 			}
-			cout << endl << endl;
 		}
 
 		void printVisited() { for (int i = 0; i < _numVertices; i++) { cout << visited[i] << endl; } }
 
 	protected: // Basically all helper methods that cannot be called from outside the Graph class.
+
+		void addNode(int i, int j) { // Appends vertex j to the end of linked list of vertex i
+		// 1. create and allocate node
+			Node* newNode = new Node;
+			Node* last = adjacencyList[i];
+			// 2. assign data to the node
+			newNode->data = j;
+			// 3. set next pointer of new node to null as its the last node
+			newNode->next = NULL;
+			// 4. if list is empty, new node becomes first node
+			if (adjacencyList[i] == NULL)
+			{
+				adjacencyList[i] = newNode;
+				return;
+			}
+			// 5. Else traverse till the last node
+			while (last->next != NULL)
+				last = last->next;
+			// 6. Change the next of last node
+			last->next = newNode;
+			return;
+		}
+		
+		void removeNode(int i, int j) {
+			// Store head node
+			Node* temp = adjacencyList[i];
+			Node* prev = new Node();
+
+			// If head node itself holds
+			// the key to be deleted
+			if (temp != NULL && temp->data == j)
+			{
+				adjacencyList[i] = temp->next; // Changed head
+				delete temp;            // free old head
+				return;
+			}
+
+			// Else Search for the key to be deleted,
+			// keep track of the previous node as we
+			// need to change 'prev->next' */
+			else
+			{
+				while (temp != NULL && temp->data != j)
+				{
+					prev = temp;
+					temp = temp->next;
+				}
+
+				// If key was not present in linked list
+				if (temp == NULL)
+					return;
+
+				// Unlink the node from linked list
+				prev->next = temp->next;
+
+				// Free memory
+				delete temp;
+			}
+		}
 
 		vector<int> Visit(Node* head) {
 			vector<int> vec;
@@ -89,9 +164,54 @@ class Graph {
 			return vec;
 		}
 
+		void resetVisited() { visited = new bool[_numVertices]; for (int i = 0; i < _numVertices; i++) { visited[i] = false; } }
+
+		bool isRepeatedComponent() {
+			for (int i = 0; i < _numComponents; i++) {
+				if (getComponent() == components.at(i)) { return true; }
+			}
+			return false;
+		}
+
+		vector<int> getComponent() {
+			vector<int> verticesInComponent;
+			for (int i = 0; i < _numVertices; i++) {
+				if (visited[i] == 1) {
+					verticesInComponent.push_back(i);
+				}
+			}
+			return verticesInComponent;
+		}
+
 		int listLength(Node* head) {
 			if (head == NULL) { return 0; }
 			return 1 + listLength(head->next);
+		}
+
+		void initializeAdjacencyList() { adjacencyList = new Node * [_numVertices]; for (int i = 0; i < _numVertices; ++i) { adjacencyList[i] = NULL; } }
+
+		void fillAdjacencyList(map<int, map<int, int>> originalEdges) {
+			map<int, map<int, int> >::iterator itr;
+			map<int, int>::iterator ptr;
+
+			for (itr = originalEdges.begin(); itr != originalEdges.end(); itr++) {
+				for (ptr = itr->second.begin(); ptr != itr->second.end(); ptr++) {
+					edgeAddition(ptr->first, ptr->second);
+				}
+			}
+		}
+
+		void deleteEntireAdjacencyList() {
+			for (int i = 0; i < _numVertices; i++) {
+				Node* current = adjacencyList[i];
+				Node* next;
+				while (current != NULL) {
+					next = current->next;
+					free(current);
+					current = next;
+				}
+				adjacencyList[i] = NULL;
+			}
 		}
 
 		void initializeAdjacencyMatrix() {
@@ -112,63 +232,14 @@ class Graph {
 			}
 		}
 
-		void append(int i, int j) { // Appends vertex j to the end of linked list of vertex i
-			// 1. create and allocate node
-			Node* newNode = new Node;
-			Node* last = adjacencyList[i];
-			// 2. assign data to the node
-			newNode->data = j;
-			// 3. set next pointer of new node to null as its the last node
-			newNode->next = NULL;
-			// 4. if list is empty, new node becomes first node
-			if (adjacencyList[i] == NULL)
-			{
-				adjacencyList[i] = newNode;
-				return;
-			}
-			// 5. Else traverse till the last node
-			while (last->next != NULL)
-				last = last->next;
-			// 6. Change the next of last node
-			last->next = newNode;
-			return;
-		} 
-
-		void fillAdjacencyList(map<int, map<int, int>> originalEdges) {
-			map<int, map<int, int> >::iterator itr;
-			map<int, int>::iterator ptr;
-
-			for (itr = originalEdges.begin(); itr != originalEdges.end(); itr++) {
-				for (ptr = itr->second.begin(); ptr != itr->second.end(); ptr++) {
-					edgeAddition(ptr->first, ptr->second);
-				}
-			}
-		}
-
-		void deleteEntireAdjacencyList() {
-			for (int i = 0; i < _numVertices; i++) {
-				Node* current = adjacencyList[i];
-				Node* next;
-				while (current != NULL) {
-					//cout << current->data << "\t";
-					next = current->next;
-					free(current);
-					current = next;
-				}
-				adjacencyList[i] = NULL;
-			}	
-		}
-
-		void resetVisited() { visited = new bool[_numVertices]; for (int i = 0; i < _numVertices; i++) { visited[i] = false; } }
-
-		void initializeAdjacencyList() { adjacencyList = new Node * [_numVertices]; for (int i = 0; i < _numVertices; ++i) { adjacencyList[i] = NULL; } }
-
 	private:
 		int _numVertices;
 		int _numEdges;
 
+		vector<vector<int>> components;
+		int _numComponents;
+
 		Node** adjacencyList;
-		Node* prev;
 
 		bool** adjacencyMatrix;
 		bool* visited;
@@ -242,5 +313,10 @@ int main() {
 
 	Graph graph = Graph(numVertices, E);
 	graph.Components();
+
+	graph.printAdjacencyMatrix();
+	graph.printAdjacencyList();
+	graph.printAllComponents();
+
 	graph.~Graph();
 }
